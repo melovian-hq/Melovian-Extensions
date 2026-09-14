@@ -51,4 +51,4 @@ npm run check         # strict audit + verify registry.json is in sync
 npm test              # node:test suite for the tools
 ```
 
-Needs Node 22 or newer. No dependencies; the tools are plain node stdlib.
+Needs Node 22 or newer. No dependencies. The tools are plain node stdlib.
