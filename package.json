@@ -1,0 +1,17 @@
+{
+  "name": "melovian-extensions",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Community extension registry for Melovian",
+  "scripts": {
+    "audit": "node tools/audit.mjs",
+    "audit:strict": "node tools/audit.mjs --strict",
+    "build": "node tools/build.mjs",
+    "check": "node tools/audit.mjs --strict && node tools/build.mjs --check",
+    "test": "node --test tools/"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

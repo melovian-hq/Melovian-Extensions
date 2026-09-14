@@ -1,0 +1,52 @@
+{
+  "id": "neon-arcade",
+  "name": "Neon arcade",
+  "version": "1.0.0",
+  "description": "Neon player chrome that turns on while synthwave, retrowave, vaporwave, or chiptune tracks play.",
+  "author": "Melovian",
+  "icon": "assets/icon.svg",
+  "appTheme": "neon-arcade",
+  "styles": ["theme.css"],
+  "trackRules": [
+    {
+      "match": {
+        "genreContains": "synthwave"
+      },
+      "decoration": {
+        "playerTheme": "neon-arcade",
+        "progressGradient": "#f471ff,#00e5ff",
+        "icon": "sparkles"
+      }
+    },
+    {
+      "match": {
+        "genreContains": "retrowave"
+      },
+      "decoration": {
+        "playerTheme": "neon-arcade",
+        "progressGradient": "#f471ff,#00e5ff",
+        "icon": "sparkles"
+      }
+    },
+    {
+      "match": {
+        "genreContains": "vaporwave"
+      },
+      "decoration": {
+        "playerTheme": "neon-arcade",
+        "progressGradient": "#f471ff,#00e5ff",
+        "icon": "sparkles"
+      }
+    },
+    {
+      "match": {
+        "genreContains": "chiptune"
+      },
+      "decoration": {
+        "playerTheme": "neon-arcade",
+        "progressGradient": "#f471ff,#00e5ff",
+        "icon": "sparkles"
+      }
+    }
+  ]
+}

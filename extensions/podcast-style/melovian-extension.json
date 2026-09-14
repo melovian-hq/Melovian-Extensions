@@ -1,0 +1,28 @@
+{
+  "id": "podcast-style",
+  "name": "Podcast progress style",
+  "version": "1.0.0",
+  "description": "Orange progress bar and a microphone icon on podcast episodes. Matches a podcast genre or the word podcast in the title.",
+  "author": "Melovian",
+  "icon": "assets/icon.svg",
+  "trackRules": [
+    {
+      "match": {
+        "genreContains": "podcast"
+      },
+      "decoration": {
+        "progressColor": "#e67e22",
+        "icon": "microphone"
+      }
+    },
+    {
+      "match": {
+        "titleContains": "podcast"
+      },
+      "decoration": {
+        "progressColor": "#e67e22",
+        "icon": "microphone"
+      }
+    }
+  ]
+}

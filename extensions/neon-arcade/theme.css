@@ -1,0 +1,19 @@
+/*
+ * Neon arcade chrome. Melovian sets data-extension-theme on the html
+ * element while the current track decoration asks for this theme, so
+ * every rule below stays scoped to [data-extension-theme="neon-arcade"].
+ * Only semantic tokens are overridden so light and dark mode both work.
+ */
+
+[data-extension-theme="neon-arcade"] {
+  --jb-accent: #f471ff;
+  --jb-accent-hover: #ff9dff;
+  --jb-accent-muted: rgba(244, 113, 255, 0.16);
+  --jb-accent-text: #12060f;
+  --jb-music-accent: #00e5ff;
+}
+
+[data-extension-theme="neon-arcade"] .player,
+[data-extension-theme="neon-arcade"] .now-playing {
+  text-shadow: 0 0 12px rgba(0, 229, 255, 0.45);
+}

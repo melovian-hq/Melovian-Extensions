@@ -1,0 +1,9 @@
+{
+  "id": "genre-palette",
+  "name": "Genre palette",
+  "version": "1.0.0",
+  "description": "Colors the progress bar by genre. A sandboxed script registers one rule per genre so the palette stays compact.",
+  "author": "Melovian",
+  "icon": "assets/icon.svg",
+  "script": "script.js"
+}

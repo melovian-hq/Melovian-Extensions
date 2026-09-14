@@ -1,0 +1,106 @@
+{
+  "version": 1,
+  "generatedAt": "2026-09-14T21:32:43.254Z",
+  "extensions": [
+    {
+      "id": "explicit-badge",
+      "name": "Explicit badge",
+      "version": "1.0.0",
+      "description": "Adds an [E] title prefix and a red progress bar to tracks marked explicit in the title or by an explicit tag.",
+      "author": "Melovian",
+      "icon": "extensions/explicit-badge/assets/icon.svg",
+      "package": {
+        "url": "https://melovian-hq.github.io/Melovian-Extensions/dist/explicit-badge-1.0.0.zip",
+        "sha256": "94721a2b921b7541bbc69e98f8410a2241bcc3000f6133ed4f766c6a69fd9f69",
+        "bytes": 1262
+      },
+      "capabilities": {
+        "script": false,
+        "wasm": false,
+        "styles": 0,
+        "appTheme": false,
+        "trackRules": 2,
+        "playerHooks": 0
+      },
+      "audit": {
+        "status": "pass",
+        "warnings": []
+      }
+    },
+    {
+      "id": "genre-palette",
+      "name": "Genre palette",
+      "version": "1.0.0",
+      "description": "Colors the progress bar by genre. A sandboxed script registers one rule per genre so the palette stays compact.",
+      "author": "Melovian",
+      "icon": "extensions/genre-palette/assets/icon.svg",
+      "package": {
+        "url": "https://melovian-hq.github.io/Melovian-Extensions/dist/genre-palette-1.0.0.zip",
+        "sha256": "5f553590b396bc8fc7cba107766e6539a7e4f60557a24d9099e39f9bb6e4a3c1",
+        "bytes": 2118
+      },
+      "capabilities": {
+        "script": true,
+        "wasm": false,
+        "styles": 0,
+        "appTheme": false,
+        "trackRules": 0,
+        "playerHooks": 0
+      },
+      "audit": {
+        "status": "pass",
+        "warnings": []
+      }
+    },
+    {
+      "id": "neon-arcade",
+      "name": "Neon arcade",
+      "version": "1.0.0",
+      "description": "Neon player chrome that turns on while synthwave, retrowave, vaporwave, or chiptune tracks play.",
+      "author": "Melovian",
+      "icon": "extensions/neon-arcade/assets/icon.svg",
+      "package": {
+        "url": "https://melovian-hq.github.io/Melovian-Extensions/dist/neon-arcade-1.0.0.zip",
+        "sha256": "3709ce243b6ddb5fe3ed7e44bfc75076a1596937409a29e022c2cb70a7f2478b",
+        "bytes": 2582
+      },
+      "capabilities": {
+        "script": false,
+        "wasm": false,
+        "styles": 1,
+        "appTheme": true,
+        "trackRules": 4,
+        "playerHooks": 0
+      },
+      "audit": {
+        "status": "pass",
+        "warnings": []
+      }
+    },
+    {
+      "id": "podcast-style",
+      "name": "Podcast progress style",
+      "version": "1.0.0",
+      "description": "Orange progress bar and a microphone icon on podcast episodes. Matches a podcast genre or the word podcast in the title.",
+      "author": "Melovian",
+      "icon": "extensions/podcast-style/assets/icon.svg",
+      "package": {
+        "url": "https://melovian-hq.github.io/Melovian-Extensions/dist/podcast-style-1.0.0.zip",
+        "sha256": "9fdd103aa10b14558bb9b275ce0d565a1948a162dc0e9a930828ec9827b95322",
+        "bytes": 1330
+      },
+      "capabilities": {
+        "script": false,
+        "wasm": false,
+        "styles": 0,
+        "appTheme": false,
+        "trackRules": 2,
+        "playerHooks": 0
+      },
+      "audit": {
+        "status": "pass",
+        "warnings": []
+      }
+    }
+  ]
+}
