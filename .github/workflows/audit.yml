@@ -40,7 +40,7 @@ jobs:
         run: node tools/audit.mjs --strict
 
       - name: Run tool tests
-        run: node --test tools/
+        run: node --test tools/*.test.mjs
 
       - name: Verify registry.json is in sync
         run: node tools/build.mjs --check

@@ -9,7 +9,7 @@
     "audit:strict": "node tools/audit.mjs --strict",
     "build": "node tools/build.mjs",
     "check": "node tools/audit.mjs --strict && node tools/build.mjs --check",
-    "test": "node --test tools/"
+    "test": "node --test tools/*.test.mjs"
   },
   "engines": {
     "node": ">=22"
