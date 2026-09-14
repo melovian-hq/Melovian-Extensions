@@ -213,6 +213,80 @@ test("extension with no effect warns", async () => {
   cleanup();
 });
 
+test("bidi control characters fail", async () => {
+  const { dir, cleanup } = makeDir({
+    [MANIFEST_NAME]: manifest(),
+    "script.js": 'function register() { const a = "\u202E"; }',
+  });
+  const result = await auditExtension(dir);
+  assert.ok(result.errors.some((e) => e.includes("bidi")));
+  cleanup();
+});
+
+test("invisible characters fail", async () => {
+  const { dir, cleanup } = makeDir({
+    [MANIFEST_NAME]: manifest({ script: "s.js" }),
+    "s.js": "function register() { const x = 1\u00AD; }",
+  });
+  const result = await auditExtension(dir);
+  assert.ok(result.errors.some((e) => e.includes("invisible Unicode")));
+  cleanup();
+});
+
+test("long hex escape run fails", async () => {
+  const { dir, cleanup } = makeDir({
+    [MANIFEST_NAME]: manifest({ script: "s.js" }),
+    "s.js": 'function register() { const s = "\\x65\\x76\\x61\\x6c\\x28\\x31\\x29"; }',
+  });
+  const result = await auditExtension(dir);
+  assert.ok(result.errors.some((e) => e.includes("hex escape run")));
+  cleanup();
+});
+
+test("time gating warns", async () => {
+  const { dir, cleanup } = makeDir({
+    [MANIFEST_NAME]: manifest({ script: "s.js" }),
+    "s.js": "function register() { if (Date.now() > 1999999999) doThing(); }",
+  });
+  const result = await auditExtension(dir);
+  assert.ok(result.warnings.some((w) => w.includes("time-gated")));
+  cleanup();
+});
+
+test("png with trailing data fails", async () => {
+  const png = Buffer.concat([
+    Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
+    Buffer.from([0, 0, 0, 0, 0x49, 0x45, 0x4e, 0x44, 0xae, 0x42, 0x60, 0x82]),
+    Buffer.from([1, 2, 3, 4]),
+  ]);
+  const { dir, cleanup } = makeDir({
+    [MANIFEST_NAME]: manifest({ icon: "icon.png" }),
+    "icon.png": png,
+  });
+  const result = await auditExtension(dir);
+  assert.ok(result.errors.some((e) => e.includes("after IEND")));
+  cleanup();
+});
+
+test("changelog version must match manifest", async () => {
+  const { dir, cleanup } = makeDir({
+    [MANIFEST_NAME]: manifest({ version: "2.0.0" }),
+    "CHANGELOG.md": "# Changelog\n\n## 1.0.0 - 2026-01-01\n\n- Old.\n",
+  });
+  const result = await auditExtension(dir);
+  assert.ok(result.errors.some((e) => e.includes("does not match manifest version")));
+  cleanup();
+});
+
+test("http homepage fails", async () => {
+  const { dir, cleanup } = makeDir({
+    [MANIFEST_NAME]: manifest({ homepage: "http://example.com" }),
+  });
+  const result = await auditExtension(dir);
+  assert.ok(result.errors.some((e) => e.includes("homepage")));
+  cleanup();
+});
+
 test("buildZip writes a readable archive", () => {
   const zip = buildZip([
     { name: "my-ext/melovian-extension.json", data: Buffer.from("{}") },

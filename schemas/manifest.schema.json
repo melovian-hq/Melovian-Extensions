@@ -19,6 +19,27 @@
     },
     "description": { "type": "string", "maxLength": 500 },
     "author": { "type": "string", "maxLength": 120 },
+    "homepage": {
+      "type": "string",
+      "pattern": "^https://",
+      "description": "Project homepage or source URL, https only."
+    },
+    "license": {
+      "type": "string",
+      "maxLength": 64,
+      "description": "SPDX identifier, for example Apache-2.0."
+    },
+    "tags": {
+      "type": "array",
+      "maxItems": 12,
+      "items": { "type": "string", "pattern": "^[a-z0-9-]{1,24}$" }
+    },
+    "screenshots": {
+      "type": "array",
+      "maxItems": 8,
+      "items": { "type": "string" },
+      "description": "Image paths relative to the extension folder, shown on the registry site."
+    },
     "icon": {
       "type": "string",
       "description": "Image path relative to the extension folder, for example assets/icon.svg."
@@ -39,7 +60,7 @@
     },
     "script": {
       "type": "string",
-      "description": "Sandboxed script path relative to the extension folder (.js or .mjs)."
+      "description": "Sandboxed script path relative to the extension folder (.js, .mjs, or .ts; TypeScript is stripped to JS at pack time)."
     },
     "trackRules": {
       "type": "array",

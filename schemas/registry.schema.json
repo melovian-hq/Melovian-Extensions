@@ -25,6 +25,30 @@
         "version": { "type": "string" },
         "description": { "type": "string" },
         "author": { "type": "string" },
+        "homepage": { "type": "string", "format": "uri" },
+        "license": { "type": "string" },
+        "tags": { "type": "array", "items": { "type": "string" } },
+        "screenshots": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Image paths relative to the registry base URL."
+        },
+        "externalUrls": {
+          "type": "array",
+          "items": { "type": "string", "format": "uri" },
+          "description": "Every external URL found in the package, for the privacy display."
+        },
+        "risk": { "enum": ["low", "medium", "high"] },
+        "changelog": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/release" },
+          "description": "Parsed from the extension CHANGELOG.md, newest first."
+        },
+        "versions": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/versionEntry" },
+          "description": "Download history, newest first. Older entries stay installable."
+        },
         "icon": {
           "type": "string",
           "description": "Image path relative to the registry base URL."
@@ -40,7 +64,11 @@
           "properties": {
             "url": { "type": "string", "format": "uri" },
             "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
-            "bytes": { "type": "integer", "minimum": 1 }
+            "bytes": { "type": "integer", "minimum": 1 },
+            "signature": {
+              "type": "string",
+              "description": "Ed25519 signature over the zip bytes, base64."
+            }
           }
         },
         "capabilities": {
@@ -65,6 +93,30 @@
             "warnings": { "type": "array", "items": { "type": "string" } }
           }
         }
+      }
+    },
+    "release": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "date", "notes"],
+      "properties": {
+        "version": { "type": "string" },
+        "date": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+        "notes": { "type": "string" }
+      }
+    },
+    "versionEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "url", "sha256", "bytes", "releasedAt"],
+      "properties": {
+        "version": { "type": "string" },
+        "url": { "type": "string", "format": "uri" },
+        "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "bytes": { "type": "integer", "minimum": 1 },
+        "signature": { "type": "string" },
+        "releasedAt": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+        "notes": { "type": "string" }
       }
     }
   }

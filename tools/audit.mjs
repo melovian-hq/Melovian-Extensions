@@ -37,6 +37,7 @@ export const ALLOWED_EXTS = new Set([
   ".json",
   ".js",
   ".mjs",
+  ".ts",
   ".wasm",
   ".css",
   ".txt",
@@ -54,7 +55,16 @@ export const ALLOWED_EXTS = new Set([
 ]);
 
 const IMAGE_EXTS = new Set([".png", ".jpg", ".jpeg", ".webp", ".gif", ".svg"]);
-const TEXT_EXTS = new Set([".json", ".js", ".mjs", ".css", ".txt", ".md", ".svg"]);
+const TEXT_EXTS = new Set([
+  ".json",
+  ".js",
+  ".mjs",
+  ".ts",
+  ".css",
+  ".txt",
+  ".md",
+  ".svg",
+]);
 
 const MANIFEST_KEYS = new Set([
   "id",
@@ -62,8 +72,12 @@ const MANIFEST_KEYS = new Set([
   "version",
   "description",
   "author",
+  "homepage",
+  "license",
+  "tags",
   "icon",
   "image",
+  "screenshots",
   "appTheme",
   "styles",
   "script",
@@ -113,12 +127,57 @@ export const BLOCKED_SCRIPT_PATTERNS = [
 ];
 
 // Not blocked by the app sandbox, but worth a human look during review.
+// Sources: Socket obfuscation writeups, the StegoAd campaign (Microsoft
+// VR), GlassWorm/Open VSX reports, and the Trojan Source paper.
 const SCRIPT_WARN_PATTERNS = [
-  [/\batob\s*\(|\bbtoa\s*\(|String\.fromCharCode/, "obfuscation primitive"],
+  [/\batob\s*\(|\bbtoa\s*\(|String\.fromCharCode|unescape\s*\(/, "obfuscation primitive"],
   [/\bWebSocket\b|\bEventSource\b|\bnavigator\.|\bindexedDB\b/, "platform API access"],
   [/\bWebAssembly\b/, "WebAssembly usage"],
   [/[A-Za-z0-9+/]{200,}={0,2}/, "long base64-looking blob"],
+  [/\bsetTimeout\s*\(\s*["'`]|\bsetInterval\s*\(\s*["'`]/, "string-eval timer"],
+  [
+    /\bDate\.now\s*\(|\bnew Date\s*\(|\bperformance\.now\s*\(/,
+    "time-gated logic, dormant payloads delay execution this way",
+  ],
+  [
+    /\bnavigator\.userAgent|\bouterWidth\b|\bFirebug\b|devtools/i,
+    "environment detection, payloads hide from reviewers this way",
+  ],
+  [
+    /\[\s*["'](?:window|document|globalThis|self|top|frames|fetch|eval|localStorage|sessionStorage|constructor|__proto__)\s*["']\s*\]/,
+    "computed property access on a sandboxed global",
+  ],
+  [
+    /\bself\b|\btop\b|\bframes\b|\bparent\b/,
+    "global scope escape alias",
+  ],
 ];
+
+// Runs of escaped bytes spelling printable ASCII exist to hide strings
+// from reviewers. Four or more in a row have no legitimate use here.
+const ENCODED_RUN_PATTERNS = [
+  [/(?:\\x[0-9a-fA-F]{2}){4,}/, "hex escape run"],
+  [/(?:\\u[0-9a-fA-F]{4}){4,}/, "unicode escape run"],
+  [/(?:\\u\{[0-9a-fA-F]+\}){4,}/, "unicode codepoint escape run"],
+];
+
+// Trojan Source and GlassWorm carriers: bidi controls reorder code
+// visually, invisible format chars smuggle payloads, tag block chars
+// encode ASCII invisibly. None belong in extension source.
+const UNICODE_BLOCK = /[\u202A-\u202E\u2066-\u2069\u200B-\u200D\u2060\uFEFF\u034F\u115F\u1160\u3164\uFFA0]/;
+const UNICODE_BLOCK_SUPPLEMENT =
+  /[\u{E0000}-\u{E00EF}\u{E0100}-\u{E01EF}\u{FE00}-\u{FE0F}]/u;
+const UNICODE_FORMAT_CATEGORY = /\p{Cf}/u;
+
+const URL_PATTERN = /https?:\/\/[^\s"'`)\]}>\\]+/g;
+
+// Namespace identifiers look like URLs but are never fetched.
+const NON_FETCHED_HOSTS = new Set([
+  "www.w3.org",
+  "schemas.xmlsoap.org",
+  "schemas.openxmlformats.org",
+  "purl.org",
+]);
 
 const SECRET_PATTERNS = [
   [/-----BEGIN [A-Z ]*PRIVATE KEY-----/, "private key"],
@@ -150,6 +209,78 @@ const SVG_BLOCK_PATTERNS = [
 ];
 
 const COLOR_SUSPECT = /[;{}]|url\s*\(|javascript\s*:/i;
+
+function scanInvisibleUnicode(rel, text, errors) {
+  if (UNICODE_BLOCK.test(text) || UNICODE_BLOCK_SUPPLEMENT.test(text)) {
+    errors.push(`${rel} contains bidi controls, zero-width, or tag block characters`);
+    return;
+  }
+  if (UNICODE_FORMAT_CATEGORY.test(text)) {
+    errors.push(`${rel} contains invisible Unicode format characters`);
+  }
+}
+
+function collectExternalUrls(text, out) {
+  for (const match of text.matchAll(URL_PATTERN)) {
+    let url = match[0].replace(/[.,;:]+$/, "");
+    try {
+      const parsed = new URL(url);
+      if (
+        (parsed.protocol === "http:" || parsed.protocol === "https:") &&
+        !NON_FETCHED_HOSTS.has(parsed.hostname)
+      ) {
+        out.add(parsed.toString());
+      }
+    } catch {
+      // not a URL after all
+    }
+  }
+}
+
+// Binary image trailers: StegoAd-style campaigns hide payload bytes after
+// the image terminator (PNG IEND, JPEG EOI, GIF trailer). Flag any
+// trailing data so a human reviews it.
+export function checkImageTrailer(rel, data, errors, warnings) {
+  const ext = path.extname(rel).toLowerCase();
+  if (ext === ".png") {
+    const iend = data.lastIndexOf(Buffer.from("IEND"));
+    if (iend === -1) {
+      warnings.push(`${rel} is not a well-formed PNG (no IEND)`);
+      return;
+    }
+    const trailing = data.length - (iend + 8);
+    if (trailing > 0) {
+      errors.push(`${rel} has ${trailing} byte(s) after IEND, possible hidden payload`);
+    }
+    return;
+  }
+  if (ext === ".jpg" || ext === ".jpeg") {
+    const eoi = data.lastIndexOf(Buffer.from([0xff, 0xd9]));
+    if (eoi === -1) return;
+    const trailing = data.length - (eoi + 2);
+    if (trailing > 0) {
+      errors.push(`${rel} has ${trailing} byte(s) after JPEG EOI marker`);
+    }
+    return;
+  }
+  if (ext === ".gif") {
+    const trailer = data.lastIndexOf(0x3b);
+    if (trailer === -1) return;
+    const trailing = data.length - (trailer + 1);
+    if (trailing > 0) {
+      errors.push(`${rel} has ${trailing} byte(s) after GIF trailer`);
+    }
+  }
+}
+
+// Name/author impersonation: mixed-script or non-ASCII in identity fields
+// is how lookalike extensions fake trust ("Meloviаn" with Cyrillic a).
+function checkIdentityField(value, where, warnings) {
+  if (typeof value !== "string") return;
+  if (/[^\x00-\x7F]/.test(value)) {
+    warnings.push(`${where} contains non-ASCII characters, check for homoglyphs`);
+  }
+}
 
 function isSafeRelPath(rel) {
   rel = rel.trim().replace(/\\/g, "/");
@@ -385,6 +516,46 @@ function auditManifest(dir, dirFiles, errors, warnings) {
   if (manifest.author !== undefined && typeof manifest.author !== "string") {
     errors.push("author must be a string");
   }
+  checkIdentityField(manifest.name, "name", warnings);
+  checkIdentityField(manifest.author, "author", warnings);
+  if (manifest.homepage !== undefined) {
+    if (typeof manifest.homepage !== "string" || !/^https:\/\//.test(manifest.homepage)) {
+      errors.push("homepage must be an https URL");
+    }
+  }
+  if (manifest.license !== undefined) {
+    if (typeof manifest.license !== "string" || manifest.license.length > 64) {
+      errors.push("license must be a short string like Apache-2.0");
+    }
+  }
+  if (manifest.tags !== undefined) {
+    if (!Array.isArray(manifest.tags) || manifest.tags.length > 12) {
+      errors.push("tags must be an array of at most 12 entries");
+    } else {
+      for (const tag of manifest.tags) {
+        if (typeof tag !== "string" || !/^[a-z0-9-]{1,24}$/.test(tag)) {
+          errors.push(`tag ${JSON.stringify(tag)} must match [a-z0-9-]{1,24}`);
+        }
+      }
+    }
+  }
+  if (manifest.screenshots !== undefined) {
+    if (!Array.isArray(manifest.screenshots) || manifest.screenshots.length > 8) {
+      errors.push("screenshots must be an array of at most 8 paths");
+    } else {
+      for (const shot of manifest.screenshots) {
+        if (typeof shot !== "string" || !isSafeRelPath(shot)) {
+          errors.push(`screenshot path ${JSON.stringify(shot)} is not a safe relative path`);
+          continue;
+        }
+        const norm = normalizeRel(shot);
+        if (!IMAGE_EXTS.has(path.extname(norm).toLowerCase())) {
+          errors.push(`screenshot ${norm} must be an image file`);
+        }
+        if (!dirFiles.has(norm)) errors.push(`screenshot file ${norm} does not exist`);
+      }
+    }
+  }
   if (manifest.appTheme !== undefined) {
     if (typeof manifest.appTheme !== "string" || !THEME_PATTERN.test(manifest.appTheme)) {
       errors.push(`appTheme must match ${THEME_PATTERN}`);
@@ -429,8 +600,8 @@ function auditManifest(dir, dirFiles, errors, warnings) {
       errors.push(`script path ${JSON.stringify(rel)} is not a safe relative path`);
     } else {
       const norm = normalizeRel(rel);
-      if (![".js", ".mjs"].includes(path.extname(norm).toLowerCase())) {
-        errors.push(`script ${norm} must be a .js or .mjs file`);
+      if (![".js", ".mjs", ".ts"].includes(path.extname(norm).toLowerCase())) {
+        errors.push(`script ${norm} must be a .js, .mjs, or .ts file`);
       }
       if (!dirFiles.has(norm)) errors.push(`script file ${norm} does not exist`);
     }
@@ -449,11 +620,18 @@ function auditManifest(dir, dirFiles, errors, warnings) {
   return manifest;
 }
 
-function scanText(rel, text, errors, warnings) {
+function scanText(rel, text, errors, warnings, externalUrls) {
   const ext = path.extname(rel).toLowerCase();
+  scanInvisibleUnicode(rel, text, errors);
+  collectExternalUrls(text, externalUrls);
   for (const [pattern, label] of SECRET_PATTERNS) {
     if (pattern.test(text)) {
       errors.push(`${rel} contains something that looks like a ${label}`);
+    }
+  }
+  for (const [pattern, label] of ENCODED_RUN_PATTERNS) {
+    if (pattern.test(text)) {
+      errors.push(`${rel} contains a ${label}, review for hidden payloads`);
     }
   }
   if (ext === ".css") {
@@ -466,7 +644,7 @@ function scanText(rel, text, errors, warnings) {
       if (pattern.test(text)) errors.push(`${rel} contains ${label}`);
     }
   }
-  if (ext === ".js" || ext === ".mjs") {
+  if (ext === ".js" || ext === ".mjs" || ext === ".ts") {
     for (const [pattern, label] of SCRIPT_WARN_PATTERNS) {
       if (pattern.test(text)) warnings.push(`${rel} contains ${label}`);
     }
@@ -534,6 +712,7 @@ async function collectFiles(dir) {
 export async function auditExtension(dir) {
   const errors = [];
   const warnings = [];
+  const externalUrls = new Set();
   const { files, errors: walkErrors } = await collectFiles(dir);
   errors.push(...walkErrors);
 
@@ -560,21 +739,82 @@ export async function auditExtension(dir) {
   }
   if (!dirFiles.has(MANIFEST_NAME)) {
     errors.push(`missing ${MANIFEST_NAME}`);
-    return { errors, warnings, manifest: null, files };
+    return { errors, warnings, manifest: null, files, externalUrls: [] };
   }
 
   const manifest = auditManifest(dir, dirFiles, errors, warnings);
+  if (manifest) {
+    for (const key of ["icon", "image", "progressThumbUrl", "progressParticleUrl", "iconUrl"]) {
+      if (typeof manifest[key] === "string") collectExternalUrls(manifest[key], externalUrls);
+    }
+    for (const rule of manifest.trackRules ?? []) {
+      for (const key of ["progressThumbUrl", "progressParticleUrl", "iconUrl"]) {
+        if (typeof rule.decoration?.[key] === "string") {
+          collectExternalUrls(rule.decoration[key], externalUrls);
+        }
+      }
+    }
+  }
 
   for (const f of files) {
     const ext = path.extname(f.rel).toLowerCase();
+    if (IMAGE_EXTS.has(ext) && ext !== ".svg" && f.size <= MAX_ASSET_BYTES) {
+      const data = await readFile(f.full);
+      checkImageTrailer(f.rel, data, errors, warnings);
+      continue;
+    }
     if (!TEXT_EXTS.has(ext) || f.size > 4 * 1024 * 1024) continue;
     const text = await readFile(f.full, "utf8");
-    scanText(f.rel, text, errors, warnings);
+    scanText(f.rel, text, errors, warnings, externalUrls);
   }
   if (files.some((f) => path.extname(f.rel).toLowerCase() === ".wasm")) {
     warnings.push("package ships a .wasm binary, audit it by hand");
   }
-  return { errors, warnings, manifest, files };
+  auditChangelog(dir, manifest, errors, warnings);
+  return { errors, warnings, manifest, files, externalUrls: [...externalUrls].sort() };
+}
+
+const CHANGELOG_HEADING = /^##\s+\[?v?(\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?)\]?\s*-\s*(\d{4}-\d{2}-\d{2})/;
+
+// Parses keep-a-changelog style headings: "## 1.2.0 - 2026-09-14".
+export function parseChangelog(text) {
+  const releases = [];
+  let current = null;
+  for (const line of text.split("\n")) {
+    const head = line.match(CHANGELOG_HEADING);
+    if (head) {
+      current = { version: head[1], date: head[2], notes: [] };
+      releases.push(current);
+      continue;
+    }
+    if (current && line.trim()) current.notes.push(line.trim());
+  }
+  for (const rel of releases) rel.notes = rel.notes.join(" ").trim();
+  return releases;
+}
+
+function auditChangelog(dir, manifest, errors, warnings) {
+  const file = path.join(dir, "CHANGELOG.md");
+  if (!existsSync(file)) {
+    warnings.push("no CHANGELOG.md, add one so version history is reviewable");
+    return;
+  }
+  const releases = parseChangelog(readFileSync(file, "utf8"));
+  if (releases.length === 0) {
+    errors.push("CHANGELOG.md has no parseable '## x.y.z - YYYY-MM-DD' headings");
+    return;
+  }
+  if (manifest && releases[0].version !== manifest.version) {
+    errors.push(
+      `CHANGELOG.md top entry ${releases[0].version} does not match manifest version ${manifest.version}`,
+    );
+  }
+  const seen = new Set();
+  for (const rel of releases) {
+    if (seen.has(rel.version)) errors.push(`CHANGELOG.md repeats version ${rel.version}`);
+    seen.add(rel.version);
+    if (!rel.notes) warnings.push(`CHANGELOG.md ${rel.version} has no notes`);
+  }
 }
 
 export async function auditAll(rootDir) {

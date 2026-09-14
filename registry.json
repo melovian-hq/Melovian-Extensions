@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-09-14T21:32:43.254Z",
+  "generatedAt": "2026-09-14T22:26:29.324Z",
   "extensions": [
     {
       "id": "explicit-badge",
@@ -8,12 +8,40 @@
       "version": "1.0.0",
       "description": "Adds an [E] title prefix and a red progress bar to tracks marked explicit in the title or by an explicit tag.",
       "author": "Melovian",
+      "homepage": "https://github.com/melovian-hq/Melovian-Extensions",
+      "license": "Apache-2.0",
+      "tags": [
+        "badges",
+        "metadata"
+      ],
       "icon": "extensions/explicit-badge/assets/icon.svg",
       "package": {
-        "url": "https://melovian-hq.github.io/Melovian-Extensions/dist/explicit-badge-1.0.0.zip",
-        "sha256": "94721a2b921b7541bbc69e98f8410a2241bcc3000f6133ed4f766c6a69fd9f69",
-        "bytes": 1262
+        "url": "https://melovian-hq.github.io/Melovian-Extensions/packages/explicit-badge-1.0.0.zip",
+        "sha256": "57af86c977a751da5ac31f2e2ffd1cc6591ff2de911574873076f44d10581afe",
+        "bytes": 1636,
+        "signature": "7rPaDqJ/nP+xIccQhSLStp8mJ0+SGiIort4Q3zPYHviOkKKU9s2vArH1AF9oq1HBrvgjGLKNCuwSRxbU1PnUBA=="
       },
+      "versions": [
+        {
+          "version": "1.0.0",
+          "url": "https://melovian-hq.github.io/Melovian-Extensions/packages/explicit-badge-1.0.0.zip",
+          "sha256": "57af86c977a751da5ac31f2e2ffd1cc6591ff2de911574873076f44d10581afe",
+          "bytes": 1636,
+          "signature": "7rPaDqJ/nP+xIccQhSLStp8mJ0+SGiIort4Q3zPYHviOkKKU9s2vArH1AF9oq1HBrvgjGLKNCuwSRxbU1PnUBA==",
+          "releasedAt": "2026-09-01",
+          "notes": "- Initial release. [E] prefix and red progress on explicit tracks."
+        }
+      ],
+      "changelog": [
+        {
+          "version": "1.0.0",
+          "date": "2026-09-01",
+          "notes": "- Initial release. [E] prefix and red progress on explicit tracks."
+        }
+      ],
+      "externalUrls": [
+        "https://github.com/melovian-hq/Melovian-Extensions"
+      ],
       "capabilities": {
         "script": false,
         "wasm": false,
@@ -22,6 +50,7 @@
         "trackRules": 2,
         "playerHooks": 0
       },
+      "risk": "medium",
       "audit": {
         "status": "pass",
         "warnings": []
@@ -30,15 +59,58 @@
     {
       "id": "genre-palette",
       "name": "Genre palette",
-      "version": "1.0.0",
-      "description": "Colors the progress bar by genre. A sandboxed script registers one rule per genre so the palette stays compact.",
+      "version": "1.1.0",
+      "description": "Colors the progress bar by genre. A sandboxed TypeScript script registers one rule per genre so the palette stays compact.",
       "author": "Melovian",
+      "homepage": "https://github.com/melovian-hq/Melovian-Extensions",
+      "license": "Apache-2.0",
+      "tags": [
+        "genre",
+        "colors",
+        "script"
+      ],
       "icon": "extensions/genre-palette/assets/icon.svg",
       "package": {
-        "url": "https://melovian-hq.github.io/Melovian-Extensions/dist/genre-palette-1.0.0.zip",
-        "sha256": "5f553590b396bc8fc7cba107766e6539a7e4f60557a24d9099e39f9bb6e4a3c1",
-        "bytes": 2118
+        "url": "https://melovian-hq.github.io/Melovian-Extensions/packages/genre-palette-1.1.0.zip",
+        "sha256": "b763153f72bc78610a16ec2eed29bf0d526296c12e2bf2a2d4a5e725162cdaae",
+        "bytes": 4089,
+        "signature": "CMJlPuhoWw/2TxTokIt8s4Ox4OzVR2xtZEGasAjy8zfxiZZgeGuH/mMBusEP01FRWuHRkKQx2MrVZ/vEBShFDg=="
       },
+      "versions": [
+        {
+          "version": "1.1.0",
+          "url": "https://melovian-hq.github.io/Melovian-Extensions/packages/genre-palette-1.1.0.zip",
+          "sha256": "b763153f72bc78610a16ec2eed29bf0d526296c12e2bf2a2d4a5e725162cdaae",
+          "bytes": 4089,
+          "signature": "CMJlPuhoWw/2TxTokIt8s4Ox4OzVR2xtZEGasAjy8zfxiZZgeGuH/mMBusEP01FRWuHRkKQx2MrVZ/vEBShFDg==",
+          "releasedAt": "2026-09-14",
+          "notes": "- Rewrote the script in TypeScript against the published sandbox API types. - Added synth-pop, chillwave, and drum and bass colors."
+        },
+        {
+          "version": "1.0.0",
+          "url": "https://melovian-hq.github.io/Melovian-Extensions/packages/genre-palette-1.0.0.zip",
+          "sha256": "18263a92cdc50c7e138bf3ee609a3b83d6d445ecd0817eec169fe56862ca97a9",
+          "bytes": 2118,
+          "releasedAt": "2026-09-01",
+          "notes": "Initial release. One progress color per genre, registered by a sandboxed script.",
+          "signature": "Lxjdlkfz+WXlHVy3rapJgNECD+R4dfn3NqVYlNa7kmUFVT3WIAuZCAF3IThu9t8TzqflVj+Hj4MDuEn3Brd9AQ=="
+        }
+      ],
+      "changelog": [
+        {
+          "version": "1.1.0",
+          "date": "2026-09-14",
+          "notes": "- Rewrote the script in TypeScript against the published sandbox API types. - Added synth-pop, chillwave, and drum and bass colors."
+        },
+        {
+          "version": "1.0.0",
+          "date": "2026-09-01",
+          "notes": "- Initial release. One progress color per genre, registered by a sandboxed script."
+        }
+      ],
+      "externalUrls": [
+        "https://github.com/melovian-hq/Melovian-Extensions"
+      ],
       "capabilities": {
         "script": true,
         "wasm": false,
@@ -47,6 +119,7 @@
         "trackRules": 0,
         "playerHooks": 0
       },
+      "risk": "medium",
       "audit": {
         "status": "pass",
         "warnings": []
@@ -58,12 +131,43 @@
       "version": "1.0.0",
       "description": "Neon player chrome that turns on while synthwave, retrowave, vaporwave, or chiptune tracks play.",
       "author": "Melovian",
+      "homepage": "https://github.com/melovian-hq/Melovian-Extensions",
+      "license": "Apache-2.0",
+      "tags": [
+        "theme",
+        "retro"
+      ],
       "icon": "extensions/neon-arcade/assets/icon.svg",
+      "screenshots": [
+        "extensions/neon-arcade/assets/screenshot.svg"
+      ],
       "package": {
-        "url": "https://melovian-hq.github.io/Melovian-Extensions/dist/neon-arcade-1.0.0.zip",
-        "sha256": "3709ce243b6ddb5fe3ed7e44bfc75076a1596937409a29e022c2cb70a7f2478b",
-        "bytes": 2582
+        "url": "https://melovian-hq.github.io/Melovian-Extensions/packages/neon-arcade-1.0.0.zip",
+        "sha256": "6fdf3bae301f31e3eca4abfcab11f19b3b9567b6dde7f72904020593ace9e7a8",
+        "bytes": 4279,
+        "signature": "JVQ/ML9Pf8u30du3GrBksodTQn0onYrlhNIgnKVd6/ah9j8HBjSOyX6MWykQk3vKjja1rZ/PkkjZbsrb1SZnBg=="
       },
+      "versions": [
+        {
+          "version": "1.0.0",
+          "url": "https://melovian-hq.github.io/Melovian-Extensions/packages/neon-arcade-1.0.0.zip",
+          "sha256": "6fdf3bae301f31e3eca4abfcab11f19b3b9567b6dde7f72904020593ace9e7a8",
+          "bytes": 4279,
+          "signature": "JVQ/ML9Pf8u30du3GrBksodTQn0onYrlhNIgnKVd6/ah9j8HBjSOyX6MWykQk3vKjja1rZ/PkkjZbsrb1SZnBg==",
+          "releasedAt": "2026-09-01",
+          "notes": "- Initial release. Neon player theme for synthwave, retrowave, vaporwave, and chiptune genres."
+        }
+      ],
+      "changelog": [
+        {
+          "version": "1.0.0",
+          "date": "2026-09-01",
+          "notes": "- Initial release. Neon player theme for synthwave, retrowave, vaporwave, and chiptune genres."
+        }
+      ],
+      "externalUrls": [
+        "https://github.com/melovian-hq/Melovian-Extensions"
+      ],
       "capabilities": {
         "script": false,
         "wasm": false,
@@ -72,6 +176,7 @@
         "trackRules": 4,
         "playerHooks": 0
       },
+      "risk": "medium",
       "audit": {
         "status": "pass",
         "warnings": []
@@ -83,12 +188,40 @@
       "version": "1.0.0",
       "description": "Orange progress bar and a microphone icon on podcast episodes. Matches a podcast genre or the word podcast in the title.",
       "author": "Melovian",
+      "homepage": "https://github.com/melovian-hq/Melovian-Extensions",
+      "license": "Apache-2.0",
+      "tags": [
+        "podcast",
+        "progress"
+      ],
       "icon": "extensions/podcast-style/assets/icon.svg",
       "package": {
-        "url": "https://melovian-hq.github.io/Melovian-Extensions/dist/podcast-style-1.0.0.zip",
-        "sha256": "9fdd103aa10b14558bb9b275ce0d565a1948a162dc0e9a930828ec9827b95322",
-        "bytes": 1330
+        "url": "https://melovian-hq.github.io/Melovian-Extensions/packages/podcast-style-1.0.0.zip",
+        "sha256": "54b1bec15b36606ebdd2ff0682b08049b67260d33c496f19a5134f535232c11c",
+        "bytes": 1712,
+        "signature": "0JwxpD9t+0wpML32PEnu3X06x9SP3GQLtLU90yQ95OYey7S8Yix849UUutQDx61MbL2rHtNYzTDrOSf0JrjjDg=="
       },
+      "versions": [
+        {
+          "version": "1.0.0",
+          "url": "https://melovian-hq.github.io/Melovian-Extensions/packages/podcast-style-1.0.0.zip",
+          "sha256": "54b1bec15b36606ebdd2ff0682b08049b67260d33c496f19a5134f535232c11c",
+          "bytes": 1712,
+          "signature": "0JwxpD9t+0wpML32PEnu3X06x9SP3GQLtLU90yQ95OYey7S8Yix849UUutQDx61MbL2rHtNYzTDrOSf0JrjjDg==",
+          "releasedAt": "2026-09-01",
+          "notes": "- Initial release. Orange progress and a microphone icon on podcast tracks."
+        }
+      ],
+      "changelog": [
+        {
+          "version": "1.0.0",
+          "date": "2026-09-01",
+          "notes": "- Initial release. Orange progress and a microphone icon on podcast tracks."
+        }
+      ],
+      "externalUrls": [
+        "https://github.com/melovian-hq/Melovian-Extensions"
+      ],
       "capabilities": {
         "script": false,
         "wasm": false,
@@ -97,6 +230,7 @@
         "trackRules": 2,
         "playerHooks": 0
       },
+      "risk": "medium",
       "audit": {
         "status": "pass",
         "warnings": []

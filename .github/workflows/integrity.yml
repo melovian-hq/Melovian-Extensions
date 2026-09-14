@@ -1,0 +1,51 @@
+name: Registry integrity
+
+on:
+  schedule:
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+
+concurrency:
+  group: integrity
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Rebuild and verify signatures
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+        with:
+          egress-policy: audit
+
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup Node
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          node-version-file: .nvmrc
+
+      - name: Rebuild unsigned and compare
+        run: node tools/build.mjs --check --no-sign
+
+      - name: Verify committed signatures
+        run: |
+          node --input-type=module -e '
+            import { verifyBytes, loadPublicKeyHex } from "./tools/sign.mjs";
+            import { readFileSync } from "node:fs";
+            const pub = await loadPublicKeyHex();
+            const reg = readFileSync("registry.json");
+            const sig = Buffer.from(readFileSync("registry.sig", "utf8").trim(), "base64");
+            if (!verifyBytes(pub, reg, sig)) throw new Error("registry.sig does not verify");
+            console.log("registry.sig verifies against keys/registry.pub");
+          '
