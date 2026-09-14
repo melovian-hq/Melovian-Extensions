@@ -234,14 +234,23 @@ async function loadPreviousIndex() {
   }
 }
 
-export async function buildIndex({ baseUrl = DEFAULT_BASE_URL, sign = true } = {}) {
+export async function buildIndex({
+  baseUrl = DEFAULT_BASE_URL,
+  sign = true,
+  requireKey = true,
+} = {}) {
   const base = baseUrl.endsWith("/") ? baseUrl : `${baseUrl}/`;
   const results = await auditAll(root);
   const previous = await loadPreviousIndex();
   const extensions = [];
   const zips = new Map();
   const failures = [];
-  const key = sign ? await loadPrivateKey() : null;
+  // A missing private key is fatal for real builds but fine for --check,
+  // which verifies committed signatures against the public key instead.
+  const key = sign ? await loadPrivateKey().catch((err) => {
+    if (requireKey) throw err;
+    return null;
+  }) : null;
 
   const packagesDir = path.join(root, "packages");
   await mkdir(packagesDir, { recursive: true });
@@ -389,6 +398,7 @@ if (isMain) {
   const { index, zips, failures, results, key } = await buildIndex({
     baseUrl,
     sign: !noSign,
+    requireKey: !check,
   });
 
   for (const [name, result] of results) {
