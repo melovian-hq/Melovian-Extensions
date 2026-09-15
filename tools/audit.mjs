@@ -78,11 +78,15 @@ const MANIFEST_KEYS = new Set([
   "icon",
   "image",
   "screenshots",
+  "permissions",
+  "minAppVersion",
+  "requires",
   "appTheme",
   "styles",
   "script",
   "trackRules",
   "playerHooks",
+  "settings",
 ]);
 
 const MATCH_KEYS = new Set([
@@ -470,6 +474,114 @@ function auditPlayerHooks(manifest, errors, warnings) {
   });
 }
 
+// Capability names mirror what the app surfaces to the user. A manifest
+// that uses a capability without declaring it fails the audit, the way
+// browser extension stores treat undeclared permissions.
+export const PERMISSIONS = [
+  "styles",
+  "script",
+  "theme",
+  "track-decorations",
+  "player-hooks",
+];
+
+function usedCapabilities(manifest) {
+  const used = new Set();
+  if ((manifest.styles?.length ?? 0) > 0) used.add("styles");
+  if (manifest.script !== undefined) used.add("script");
+  if (manifest.appTheme !== undefined) used.add("theme");
+  if ((manifest.trackRules?.length ?? 0) > 0) used.add("track-decorations");
+  if ((manifest.playerHooks?.length ?? 0) > 0) used.add("player-hooks");
+  return used;
+}
+
+function auditPermissions(manifest, errors, warnings) {
+  const used = usedCapabilities(manifest);
+  const declared = manifest.permissions;
+  if (declared === undefined) {
+    if (used.size > 0) {
+      warnings.push(
+        `no permissions declared, add "permissions": [${[...used].map((p) => `"${p}"`).join(", ")}] to make the capability contract explicit`,
+      );
+    }
+    return;
+  }
+  if (!Array.isArray(declared)) {
+    errors.push("permissions must be an array");
+    return;
+  }
+  const seen = new Set();
+  for (const perm of declared) {
+    if (!PERMISSIONS.includes(perm)) {
+      errors.push(
+        `unknown permission ${JSON.stringify(perm)}; valid: ${PERMISSIONS.join(", ")}`,
+      );
+      continue;
+    }
+    if (seen.has(perm)) warnings.push(`permissions repeats ${perm}`);
+    seen.add(perm);
+    if (!used.has(perm)) {
+      warnings.push(`permissions declares ${perm} but nothing uses it`);
+    }
+  }
+  for (const cap of used) {
+    if (!seen.has(cap)) {
+      errors.push(`uses ${cap} but does not declare it in permissions`);
+    }
+  }
+}
+
+const SETTING_TYPES = new Set(["boolean", "choice", "text"]);
+const SETTING_KEY = /^[a-z0-9][a-z0-9_-]{0,62}$/;
+
+// Settings declarations mirror the app-side validation in
+// internal/extensions/settings.go. Keep both in sync or installs fail
+// after a package already passed audit.
+function auditSettings(manifest, errors, warnings) {
+  if (manifest.settings === undefined) return;
+  if (!Array.isArray(manifest.settings) || manifest.settings.length > 16) {
+    errors.push("settings must be an array of at most 16 fields");
+    return;
+  }
+  const seen = new Set();
+  for (const field of manifest.settings) {
+    if (typeof field !== "object" || field === null) {
+      errors.push("settings entries must be objects");
+      continue;
+    }
+    const key = typeof field.key === "string" ? field.key : "";
+    if (!SETTING_KEY.test(key)) {
+      errors.push(`settings key ${JSON.stringify(field.key)} must match ${SETTING_KEY}`);
+      continue;
+    }
+    if (seen.has(key)) errors.push(`settings repeats key ${key}`);
+    seen.add(key);
+    if (field.label !== undefined && (typeof field.label !== "string" || field.label.length > 80)) {
+      errors.push(`settings ${key} label must be a string of at most 80 chars`);
+    }
+    if (!SETTING_TYPES.has(field.type)) {
+      errors.push(`settings ${key} has unknown type ${JSON.stringify(field.type)}`);
+      continue;
+    }
+    if (field.type === "choice") {
+      if (!Array.isArray(field.options) || field.options.length === 0) {
+        errors.push(`settings ${key} of type choice needs options`);
+      } else if (field.options.some((o) => typeof o !== "string" || o === "")) {
+        errors.push(`settings ${key} options must be non-empty strings`);
+      } else if (field.default !== undefined && !field.options.includes(field.default)) {
+        errors.push(`settings ${key} default is not one of its options`);
+      }
+    }
+    if (field.type === "boolean" && field.default !== undefined && typeof field.default !== "boolean") {
+      errors.push(`settings ${key} default must be boolean`);
+    }
+    if (field.type === "text" && field.default !== undefined &&
+        (typeof field.default !== "string" || field.default.length > 256)) {
+      errors.push(`settings ${key} default must be a string of at most 256 chars`);
+    }
+  }
+}
+
 function auditManifest(dir, dirFiles, errors, warnings) {
   const manifestPath = path.join(dir, MANIFEST_NAME);
   if (!existsSync(manifestPath)) {
@@ -608,6 +720,42 @@ function auditManifest(dir, dirFiles, errors, warnings) {
   }
   auditTrackRules(manifest, dirFiles, errors, warnings);
   auditPlayerHooks(manifest, errors, warnings);
+  if (manifest.minAppVersion !== undefined) {
+    if (
+      typeof manifest.minAppVersion !== "string" ||
+      !VERSION_PATTERN.test(manifest.minAppVersion)
+    ) {
+      errors.push(
+        `minAppVersion must be semver, got ${JSON.stringify(manifest.minAppVersion)}`,
+      );
+    }
+  }
+  if (manifest.requires !== undefined) {
+    if (!Array.isArray(manifest.requires) || manifest.requires.length > 8) {
+      errors.push("requires must be an array of at most 8 extension ids");
+    } else {
+      for (const dep of manifest.requires) {
+        if (typeof dep !== "string" || !ID_PATTERN.test(dep)) {
+          errors.push(`requires entry ${JSON.stringify(dep)} must match ${ID_PATTERN}`);
+          continue;
+        }
+        if (dep === manifest.id) {
+          errors.push("requires may not list the extension itself");
+          continue;
+        }
+        const depManifest = path.join(
+          path.dirname(dir),
+          dep,
+          MANIFEST_NAME,
+        );
+        if (!existsSync(depManifest)) {
+          errors.push(`requires ${dep} which is not in this registry`);
+        }
+      }
+    }
+  }
+  auditPermissions(manifest, errors, warnings);
+  auditSettings(manifest, errors, warnings);
   const effectful =
     (manifest.trackRules?.length ?? 0) > 0 ||
     (manifest.playerHooks?.length ?? 0) > 0 ||

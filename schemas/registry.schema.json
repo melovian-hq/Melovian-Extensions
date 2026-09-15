@@ -9,6 +9,11 @@
   "properties": {
     "version": { "const": 1 },
     "generatedAt": { "type": "string", "format": "date-time" },
+    "keyId": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{16}$",
+      "description": "First 16 hex chars of sha256(public key) that signed registry.sig. Lets clients pick the right trusted key across rotations."
+    },
     "extensions": {
       "type": "array",
       "items": { "$ref": "#/$defs/entry" }
@@ -37,6 +42,47 @@
           "type": "array",
           "items": { "type": "string", "format": "uri" },
           "description": "Every external URL found in the package, for the privacy display."
+        },
+        "permissions": {
+          "type": "array",
+          "items": {
+            "enum": ["styles", "script", "theme", "track-decorations", "player-hooks"]
+          },
+          "description": "Declared capability contract from the manifest."
+        },
+        "minAppVersion": {
+          "type": "string",
+          "description": "Oldest Melovian version able to run this extension."
+        },
+        "requires": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Ids of other registry extensions this one depends on."
+        },
+        "settings": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["key", "type"],
+            "properties": {
+              "key": { "type": "string" },
+              "label": { "type": "string" },
+              "type": { "enum": ["boolean", "choice", "text"] },
+              "options": { "type": "array", "items": { "type": "string" } },
+              "default": {}
+            }
+          },
+          "description": "Declared user settings. Clients render a form and store values per extension."
+        },
+        "delisted": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["reason", "at"],
+          "properties": {
+            "reason": { "type": "string" },
+            "at": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" }
+          },
+          "description": "Present when the extension was pulled for cause. Clients refuse new installs and warn installed users."
         },
         "risk": { "enum": ["low", "medium", "high"] },
         "changelog": {

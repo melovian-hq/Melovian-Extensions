@@ -1,11 +1,12 @@
 {
   "version": 1,
-  "generatedAt": "2026-09-14T22:26:29.324Z",
+  "generatedAt": "2026-09-14T23:52:16.424Z",
+  "keyId": "3a095b609e35733e",
   "extensions": [
     {
       "id": "explicit-badge",
       "name": "Explicit badge",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "description": "Adds an [E] title prefix and a red progress bar to tracks marked explicit in the title or by an explicit tag.",
       "author": "Melovian",
       "homepage": "https://github.com/melovian-hq/Melovian-Extensions",
@@ -15,13 +16,25 @@
         "metadata"
       ],
       "icon": "extensions/explicit-badge/assets/icon.svg",
+      "permissions": [
+        "track-decorations"
+      ],
       "package": {
-        "url": "https://melovian-hq.github.io/Melovian-Extensions/packages/explicit-badge-1.0.0.zip",
-        "sha256": "57af86c977a751da5ac31f2e2ffd1cc6591ff2de911574873076f44d10581afe",
-        "bytes": 1636,
-        "signature": "7rPaDqJ/nP+xIccQhSLStp8mJ0+SGiIort4Q3zPYHviOkKKU9s2vArH1AF9oq1HBrvgjGLKNCuwSRxbU1PnUBA=="
+        "url": "https://melovian-hq.github.io/Melovian-Extensions/packages/explicit-badge-1.0.1.zip",
+        "sha256": "f08b100405fe0f2272c74f350708b5fe0fa6bd0a1f215f105867f20ccc35127b",
+        "bytes": 1771,
+        "signature": "Cy+fGoDm7B34yDXRXqSmebbsCGdRIqu38DvvDDn83fVaetrYzmMpCt7tC6yItQZHtv/FL4jnBOG10oLD23p9AA=="
       },
       "versions": [
+        {
+          "version": "1.0.1",
+          "url": "https://melovian-hq.github.io/Melovian-Extensions/packages/explicit-badge-1.0.1.zip",
+          "sha256": "f08b100405fe0f2272c74f350708b5fe0fa6bd0a1f215f105867f20ccc35127b",
+          "bytes": 1771,
+          "signature": "Cy+fGoDm7B34yDXRXqSmebbsCGdRIqu38DvvDDn83fVaetrYzmMpCt7tC6yItQZHtv/FL4jnBOG10oLD23p9AA==",
+          "releasedAt": "2026-09-14",
+          "notes": "- Declared the extension permissions contract in the manifest."
+        },
         {
           "version": "1.0.0",
           "url": "https://melovian-hq.github.io/Melovian-Extensions/packages/explicit-badge-1.0.0.zip",
@@ -33,6 +46,11 @@
         }
       ],
       "changelog": [
+        {
+          "version": "1.0.1",
+          "date": "2026-09-14",
+          "notes": "- Declared the extension permissions contract in the manifest."
+        },
         {
           "version": "1.0.0",
           "date": "2026-09-01",
@@ -50,7 +68,7 @@
         "trackRules": 2,
         "playerHooks": 0
       },
-      "risk": "medium",
+      "risk": "low",
       "audit": {
         "status": "pass",
         "warnings": []
@@ -59,7 +77,7 @@
     {
       "id": "genre-palette",
       "name": "Genre palette",
-      "version": "1.1.0",
+      "version": "1.2.0",
       "description": "Colors the progress bar by genre. A sandboxed TypeScript script registers one rule per genre so the palette stays compact.",
       "author": "Melovian",
       "homepage": "https://github.com/melovian-hq/Melovian-Extensions",
@@ -70,13 +88,42 @@
         "script"
       ],
       "icon": "extensions/genre-palette/assets/icon.svg",
+      "permissions": [
+        "script"
+      ],
+      "settings": [
+        {
+          "key": "muted",
+          "label": "Muted palette",
+          "type": "boolean",
+          "default": false
+        }
+      ],
       "package": {
-        "url": "https://melovian-hq.github.io/Melovian-Extensions/packages/genre-palette-1.1.0.zip",
-        "sha256": "b763153f72bc78610a16ec2eed29bf0d526296c12e2bf2a2d4a5e725162cdaae",
-        "bytes": 4089,
-        "signature": "CMJlPuhoWw/2TxTokIt8s4Ox4OzVR2xtZEGasAjy8zfxiZZgeGuH/mMBusEP01FRWuHRkKQx2MrVZ/vEBShFDg=="
+        "url": "https://melovian-hq.github.io/Melovian-Extensions/packages/genre-palette-1.2.0.zip",
+        "sha256": "ddf09b07de2d1a5b4a7db78bfe86fd681c2b6e87eb09cd2868ffe56d6b1073ea",
+        "bytes": 5392,
+        "signature": "p3+Vb5zlILdsEexZTEgQ67nGrp8/S670+X09D3T/Vjl4puXZx41NfIzJz0bH55PqRVMeUDRgmXczqlCO7AJBDA=="
       },
       "versions": [
+        {
+          "version": "1.2.0",
+          "url": "https://melovian-hq.github.io/Melovian-Extensions/packages/genre-palette-1.2.0.zip",
+          "sha256": "ddf09b07de2d1a5b4a7db78bfe86fd681c2b6e87eb09cd2868ffe56d6b1073ea",
+          "bytes": 5392,
+          "signature": "p3+Vb5zlILdsEexZTEgQ67nGrp8/S670+X09D3T/Vjl4puXZx41NfIzJz0bH55PqRVMeUDRgmXczqlCO7AJBDA==",
+          "releasedAt": "2026-09-15",
+          "notes": "- Added a Muted palette setting. The app renders it as a toggle and the script reads it through api.settings."
+        },
+        {
+          "version": "1.1.1",
+          "url": "https://melovian-hq.github.io/Melovian-Extensions/packages/genre-palette-1.1.1.zip",
+          "sha256": "1c1040c65ffeaa934de2097849a17ea4c8c88cbb509fb0a7a713e40485a56e2e",
+          "bytes": 4213,
+          "signature": "yT6kPX1Lfe0inVssQSbthtQlOLM+5+ntYmCU6tSUSsHrjR7eaHag+txJMAqUTF/UTePLDbDhjFF8XL/R78hGAg==",
+          "releasedAt": "2026-09-14",
+          "notes": "- Declared the extension permissions contract in the manifest."
+        },
         {
           "version": "1.1.0",
           "url": "https://melovian-hq.github.io/Melovian-Extensions/packages/genre-palette-1.1.0.zip",
@@ -97,6 +144,16 @@
         }
       ],
       "changelog": [
+        {
+          "version": "1.2.0",
+          "date": "2026-09-15",
+          "notes": "- Added a Muted palette setting. The app renders it as a toggle and the script reads it through api.settings."
+        },
+        {
+          "version": "1.1.1",
+          "date": "2026-09-14",
+          "notes": "- Declared the extension permissions contract in the manifest."
+        },
         {
           "version": "1.1.0",
           "date": "2026-09-14",
@@ -128,7 +185,7 @@
     {
       "id": "neon-arcade",
       "name": "Neon arcade",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "description": "Neon player chrome that turns on while synthwave, retrowave, vaporwave, or chiptune tracks play.",
       "author": "Melovian",
       "homepage": "https://github.com/melovian-hq/Melovian-Extensions",
@@ -141,13 +198,27 @@
       "screenshots": [
         "extensions/neon-arcade/assets/screenshot.svg"
       ],
+      "permissions": [
+        "styles",
+        "theme",
+        "track-decorations"
+      ],
       "package": {
-        "url": "https://melovian-hq.github.io/Melovian-Extensions/packages/neon-arcade-1.0.0.zip",
-        "sha256": "6fdf3bae301f31e3eca4abfcab11f19b3b9567b6dde7f72904020593ace9e7a8",
-        "bytes": 4279,
-        "signature": "JVQ/ML9Pf8u30du3GrBksodTQn0onYrlhNIgnKVd6/ah9j8HBjSOyX6MWykQk3vKjja1rZ/PkkjZbsrb1SZnBg=="
+        "url": "https://melovian-hq.github.io/Melovian-Extensions/packages/neon-arcade-1.0.1.zip",
+        "sha256": "62dff747d0a9914b38c1a6c56c51a5ca328c57a4dc2437569f1a1eb35c9d9ed2",
+        "bytes": 4441,
+        "signature": "TMB2qnCybIbEX5cwWtBKGCe7G3MKYxDRrQi7e0UdIXHMX1bQChJ76rr/H2ZZadiHhpKUehewLbEtN/scAL8zCA=="
       },
       "versions": [
+        {
+          "version": "1.0.1",
+          "url": "https://melovian-hq.github.io/Melovian-Extensions/packages/neon-arcade-1.0.1.zip",
+          "sha256": "62dff747d0a9914b38c1a6c56c51a5ca328c57a4dc2437569f1a1eb35c9d9ed2",
+          "bytes": 4441,
+          "signature": "TMB2qnCybIbEX5cwWtBKGCe7G3MKYxDRrQi7e0UdIXHMX1bQChJ76rr/H2ZZadiHhpKUehewLbEtN/scAL8zCA==",
+          "releasedAt": "2026-09-14",
+          "notes": "- Declared the extension permissions contract in the manifest."
+        },
         {
           "version": "1.0.0",
           "url": "https://melovian-hq.github.io/Melovian-Extensions/packages/neon-arcade-1.0.0.zip",
@@ -159,6 +230,11 @@
         }
       ],
       "changelog": [
+        {
+          "version": "1.0.1",
+          "date": "2026-09-14",
+          "notes": "- Declared the extension permissions contract in the manifest."
+        },
         {
           "version": "1.0.0",
           "date": "2026-09-01",
@@ -176,7 +252,7 @@
         "trackRules": 4,
         "playerHooks": 0
       },
-      "risk": "medium",
+      "risk": "low",
       "audit": {
         "status": "pass",
         "warnings": []
@@ -185,7 +261,7 @@
     {
       "id": "podcast-style",
       "name": "Podcast progress style",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "description": "Orange progress bar and a microphone icon on podcast episodes. Matches a podcast genre or the word podcast in the title.",
       "author": "Melovian",
       "homepage": "https://github.com/melovian-hq/Melovian-Extensions",
@@ -195,13 +271,25 @@
         "progress"
       ],
       "icon": "extensions/podcast-style/assets/icon.svg",
+      "permissions": [
+        "track-decorations"
+      ],
       "package": {
-        "url": "https://melovian-hq.github.io/Melovian-Extensions/packages/podcast-style-1.0.0.zip",
-        "sha256": "54b1bec15b36606ebdd2ff0682b08049b67260d33c496f19a5134f535232c11c",
-        "bytes": 1712,
-        "signature": "0JwxpD9t+0wpML32PEnu3X06x9SP3GQLtLU90yQ95OYey7S8Yix849UUutQDx61MbL2rHtNYzTDrOSf0JrjjDg=="
+        "url": "https://melovian-hq.github.io/Melovian-Extensions/packages/podcast-style-1.0.1.zip",
+        "sha256": "075d4eee54c50cd2f95a6e5b26999aae06fbe204834aecf420e411ab78569021",
+        "bytes": 1847,
+        "signature": "1pYTew2qbi1T9pLp0yjGyDMOYilFEVbzVIp6oPoQXmMpQD1JSILA4YJcjZjg5AbttbiU5o7qMCuz+aWnv3R5AA=="
       },
       "versions": [
+        {
+          "version": "1.0.1",
+          "url": "https://melovian-hq.github.io/Melovian-Extensions/packages/podcast-style-1.0.1.zip",
+          "sha256": "075d4eee54c50cd2f95a6e5b26999aae06fbe204834aecf420e411ab78569021",
+          "bytes": 1847,
+          "signature": "1pYTew2qbi1T9pLp0yjGyDMOYilFEVbzVIp6oPoQXmMpQD1JSILA4YJcjZjg5AbttbiU5o7qMCuz+aWnv3R5AA==",
+          "releasedAt": "2026-09-14",
+          "notes": "- Declared the extension permissions contract in the manifest."
+        },
         {
           "version": "1.0.0",
           "url": "https://melovian-hq.github.io/Melovian-Extensions/packages/podcast-style-1.0.0.zip",
@@ -213,6 +301,11 @@
         }
       ],
       "changelog": [
+        {
+          "version": "1.0.1",
+          "date": "2026-09-14",
+          "notes": "- Declared the extension permissions contract in the manifest."
+        },
         {
           "version": "1.0.0",
           "date": "2026-09-01",
@@ -230,7 +323,7 @@
         "trackRules": 2,
         "playerHooks": 0
       },
-      "risk": "medium",
+      "risk": "low",
       "audit": {
         "status": "pass",
         "warnings": []

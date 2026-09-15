@@ -1,0 +1,57 @@
+name: PR audit report
+
+on:
+  pull_request:
+
+concurrency:
+  group: pr-report-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  report:
+    name: Comment audit report
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+        with:
+          egress-policy: audit
+
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          node-version-file: .nvmrc
+
+      - name: Build report
+        run: |
+          git show "origin/${{ github.base_ref }}:registry.json" > /tmp/base-registry.json 2>/dev/null || true
+          node tools/pr-report.mjs /tmp/base-registry.json > report.md
+
+      - name: Comment on PR
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          MARKER="extension-audit-report"
+          printf '\n<!-- %s -->\n' "$MARKER" >> report.md
+          EXISTING="$(gh pr view "$PR_NUMBER" --json comments \
+            --jq "[.comments[] | select(.body | contains(\"$MARKER\")) | .id][-1]")"
+          if [ -n "$EXISTING" ]; then
+            gh api "repos/${{ github.repository }}/issues/comments/${EXISTING}" \
+              -X PATCH -F body=@report.md
+          else
+            gh pr comment "$PR_NUMBER" --body-file report.md
+          fi

@@ -1,12 +1,15 @@
 {
   "id": "podcast-style",
   "name": "Podcast progress style",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Orange progress bar and a microphone icon on podcast episodes. Matches a podcast genre or the word podcast in the title.",
   "author": "Melovian",
   "license": "Apache-2.0",
   "homepage": "https://github.com/melovian-hq/Melovian-Extensions",
-  "tags": ["podcast", "progress"],
+  "tags": [
+    "podcast",
+    "progress"
+  ],
   "icon": "assets/icon.svg",
   "trackRules": [
     {
@@ -27,5 +30,8 @@
         "icon": "microphone"
       }
     }
+  ],
+  "permissions": [
+    "track-decorations"
   ]
 }

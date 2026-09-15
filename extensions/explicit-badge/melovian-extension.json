@@ -1,12 +1,15 @@
 {
   "id": "explicit-badge",
   "name": "Explicit badge",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Adds an [E] title prefix and a red progress bar to tracks marked explicit in the title or by an explicit tag.",
   "author": "Melovian",
   "license": "Apache-2.0",
   "homepage": "https://github.com/melovian-hq/Melovian-Extensions",
-  "tags": ["badges", "metadata"],
+  "tags": [
+    "badges",
+    "metadata"
+  ],
   "icon": "assets/icon.svg",
   "trackRules": [
     {
@@ -29,5 +32,8 @@
         "icon": "alert-triangle"
       }
     }
+  ],
+  "permissions": [
+    "track-decorations"
   ]
 }

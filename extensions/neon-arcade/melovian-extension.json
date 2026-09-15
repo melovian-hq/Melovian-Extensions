@@ -1,16 +1,23 @@
 {
   "id": "neon-arcade",
   "name": "Neon arcade",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Neon player chrome that turns on while synthwave, retrowave, vaporwave, or chiptune tracks play.",
   "author": "Melovian",
   "license": "Apache-2.0",
   "homepage": "https://github.com/melovian-hq/Melovian-Extensions",
-  "tags": ["theme", "retro"],
+  "tags": [
+    "theme",
+    "retro"
+  ],
   "icon": "assets/icon.svg",
-  "screenshots": ["assets/screenshot.svg"],
+  "screenshots": [
+    "assets/screenshot.svg"
+  ],
   "appTheme": "neon-arcade",
-  "styles": ["theme.css"],
+  "styles": [
+    "theme.css"
+  ],
   "trackRules": [
     {
       "match": {
@@ -52,5 +59,10 @@
         "icon": "sparkles"
       }
     }
+  ],
+  "permissions": [
+    "styles",
+    "theme",
+    "track-decorations"
   ]
 }

@@ -56,6 +56,12 @@ declare namespace melovian {
   interface ExtensionAPI {
     registerTrackRule(rule: TrackRule): void;
     decorateTrack(ctx: DecorateTrackContext): TrackDecoration | null | undefined;
+    /**
+     * Read-only snapshot of the values the user set in the extension's
+     * settings form. Only keys declared in the manifest's settings
+     * array appear here. The object is frozen.
+     */
+    readonly settings: Readonly<Record<string, unknown>>;
   }
 }
 

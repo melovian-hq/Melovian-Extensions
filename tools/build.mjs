@@ -39,7 +39,7 @@ import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 import { auditAll, parseChangelog } from "./audit.mjs";
-import { loadPrivateKey, signBytes } from "./sign.mjs";
+import { loadPrivateKey, loadPublicKeyHex, signBytes } from "./sign.mjs";
 
 const root = path.dirname(fileURLToPath(new URL(".", import.meta.url)));
 
@@ -133,7 +133,7 @@ function sha256Hex(buf) {
   return createHash("sha256").update(buf).digest("hex");
 }
 
-function capabilities(manifest, files) {
+export function capabilities(manifest, files) {
   return {
     script: Boolean(manifest.script),
     wasm: files.some((f) => f.rel.toLowerCase().endsWith(".wasm")),
@@ -145,11 +145,14 @@ function capabilities(manifest, files) {
 }
 
 // Coarse risk rating for display. Script and wasm raise the ceiling on
-// what a package could do, external URLs raise the privacy surface.
-function riskRating(manifest, files, externalUrls) {
+// what a package could do, external URLs raise the privacy surface. The
+// manifest homepage is metadata, not a runtime surface, so it does not
+// count toward risk.
+export function riskRating(manifest, files, externalUrls) {
   const wasm = files.some((f) => f.rel.toLowerCase().endsWith(".wasm"));
   if (wasm) return "high";
-  if (manifest.script || externalUrls.length > 0) return "medium";
+  const runtimeUrls = externalUrls.filter((u) => u !== manifest.homepage);
+  if (manifest.script || runtimeUrls.length > 0) return "medium";
   return "low";
 }
 
@@ -234,6 +237,28 @@ async function loadPreviousIndex() {
   }
 }
 
+// delisted.json marks extensions pulled for cause: {"id": {"reason",
+// "at"}}. Delisted entries stay in the index so installed clients get
+// warned; the app refuses new installs of flagged entries.
+async function loadDelisted() {
+  const file = path.join(root, "delisted.json");
+  if (!existsSync(file)) return {};
+  try {
+    const doc = JSON.parse(await readFile(file, "utf8"));
+    return typeof doc === "object" && doc !== null ? doc : {};
+  } catch {
+    return {};
+  }
+}
+
+// keyId identifies which public key signed the index so clients can pick
+// the right trusted key during rotations. First 16 hex chars of the
+// sha256 of the raw public key.
+export async function keyId() {
+  const pub = await loadPublicKeyHex();
+  return createHash("sha256").update(Buffer.from(pub, "hex")).digest("hex").slice(0, 16);
+}
+
 export async function buildIndex({
   baseUrl = DEFAULT_BASE_URL,
   sign = true,
@@ -242,6 +267,7 @@ export async function buildIndex({
   const base = baseUrl.endsWith("/") ? baseUrl : `${baseUrl}/`;
   const results = await auditAll(root);
   const previous = await loadPreviousIndex();
+  const delisted = await loadDelisted();
   const extensions = [];
   const zips = new Map();
   const failures = [];
@@ -251,6 +277,9 @@ export async function buildIndex({
     if (requireKey) throw err;
     return null;
   }) : null;
+  // keyId comes from the committed public key so check mode without the
+  // private key still reproduces the field.
+  const kid = await keyId().catch(() => null);
 
   const packagesDir = path.join(root, "packages");
   await mkdir(packagesDir, { recursive: true });
@@ -360,6 +389,13 @@ export async function buildIndex({
             ),
           }
         : {}),
+      ...(manifest.permissions?.length ? { permissions: manifest.permissions } : {}),
+      ...(manifest.minAppVersion ? { minAppVersion: manifest.minAppVersion } : {}),
+      ...(manifest.requires?.length ? { requires: manifest.requires } : {}),
+      ...(manifest.settings?.length ? { settings: manifest.settings } : {}),
+      ...(delisted[manifest.id]
+        ? { delisted: { reason: String(delisted[manifest.id].reason ?? ""), at: String(delisted[manifest.id].at ?? "") } }
+        : {}),
       package: packageInfo,
       versions,
       changelog,
@@ -377,6 +413,7 @@ export async function buildIndex({
   const index = {
     version: 1,
     generatedAt: new Date().toISOString(),
+    ...(kid ? { keyId: kid } : {}),
     extensions,
   };
   return { index, zips, failures, results, key };

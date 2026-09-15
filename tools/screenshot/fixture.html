@@ -1,0 +1,116 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  :root { color-scheme: dark; }
+  body {
+    margin: 0;
+    background: #12141c;
+    color: #e8eaf2;
+    font-family: system-ui, sans-serif;
+  }
+  .track {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 16px;
+    border-bottom: 1px solid #232838;
+  }
+  .track__num { width: 24px; color: #7c8499; font-size: 12px; }
+  .track__meta { flex: 1; min-width: 0; }
+  .track__title { font-size: 14px; }
+  .track__sub { font-size: 12px; color: #7c8499; }
+  .track__bar {
+    height: 4px;
+    width: 160px;
+    background: #232838;
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .track__fill { height: 100%; width: 45%; background: #7aa2ff; }
+  .track__icon { width: 16px; font-size: 12px; text-align: center; }
+  .player {
+    padding: 14px 16px;
+    border-top: 2px solid #232838;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .player__bar {
+    flex: 1;
+    height: 6px;
+    background: #232838;
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .player__fill { height: 100%; width: 35%; background: #7aa2ff; }
+</style>
+</head>
+<body>
+  <div id="list"></div>
+  <div class="player" id="player">
+    <span class="track__sub" id="player-title"></span>
+    <div class="player__bar"><div class="player__fill"></div></div>
+  </div>
+<script>
+// Fixture track list. The extension under test decorates rows by its
+// manifest trackRules and injects its stylesheets, so a screenshot shows
+// what a user would see inside Melovian.
+const TRACKS = [
+  { title: "Midnight Drive", artist: "Neon Coast", genre: "synthwave", tags: [] },
+  { title: "Signal Lost (Explicit)", artist: "Dial Tone", genre: "rock", tags: ["explicit"] },
+  { title: "Low Orbit", artist: "Cassini", genre: "electronic", tags: [] },
+  { title: "Episode 42: The Wire", artist: "Quad4 Cast", genre: "podcast", tags: [] },
+  { title: "Blue Monday Rain", artist: "Greyfield", genre: "jazz", tags: [] },
+  { title: "Eight Bit Heart", artist: "Pixel Party", genre: "chiptune", tags: [] },
+];
+
+function matches(rule, track) {
+  const m = rule.match || {};
+  if (m.genreContains && !(track.genre || "").toLowerCase().includes(m.genreContains.toLowerCase())) return false;
+  if (m.artistContains && !(track.artist || "").toLowerCase().includes(m.artistContains.toLowerCase())) return false;
+  if (m.titleContains && !(track.title || "").toLowerCase().includes(m.titleContains.toLowerCase())) return false;
+  if (m.titleRegex && !new RegExp(m.titleRegex, "i").test(track.title)) return false;
+  if (m.tagEquals && !(track.tags || []).includes(m.tagEquals)) return false;
+  return true;
+}
+
+const GLYPHS = { "alert-triangle": "!", sparkles: "*", microphone: "(o)" };
+
+function render(manifest) {
+  const list = document.getElementById("list");
+  let playerTheme = null;
+  for (const track of TRACKS) {
+    const row = document.createElement("div");
+    row.className = "track";
+    let deco = {};
+    for (const rule of manifest.trackRules || []) {
+      if (matches(rule, track)) deco = { ...deco, ...(rule.decoration || {}) };
+    }
+    if (deco.playerTheme) playerTheme = deco.playerTheme;
+    const icon = deco.icon ? `<span class="track__icon">${GLYPHS[deco.icon] || deco.icon}</span>` : "";
+    row.innerHTML = `
+      <span class="track__num">${list.children.length + 1}</span>
+      <div class="track__meta">
+        <div class="track__title">${deco.titlePrefix || ""}${track.title}</div>
+        <div class="track__sub">${track.artist} · ${track.genre}</div>
+      </div>
+      ${icon}
+      <div class="track__bar"><div class="track__fill"></div></div>`;
+    const fill = row.querySelector(".track__fill");
+    if (deco.progressGradient) {
+      const [a, b] = deco.progressGradient.split(",");
+      fill.style.background = `linear-gradient(90deg, ${a}, ${b || a})`;
+    } else if (deco.progressColor) {
+      fill.style.background = deco.progressColor;
+    }
+    list.appendChild(row);
+  }
+  document.getElementById("player-title").textContent = "Now playing";
+  if (playerTheme) document.body.dataset.theme = playerTheme;
+  window.__done = true;
+}
+</script>
+</body>
+</html>

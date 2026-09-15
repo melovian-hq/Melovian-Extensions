@@ -287,6 +287,132 @@ test("http homepage fails", async () => {
   cleanup();
 });
 
+test("undeclared capability fails the audit", async () => {
+  const { dir, cleanup } = makeDir({
+    [MANIFEST_NAME]: manifest({
+      permissions: [],
+      trackRules: [{ match: {}, decoration: { icon: "sparkles" } }],
+    }),
+  });
+  const result = await auditExtension(dir);
+  assert.ok(
+    result.errors.some((e) => e.includes("does not declare it in permissions")),
+    result.errors.join("\n"),
+  );
+  cleanup();
+});
+
+test("declared permissions matching usage pass", async () => {
+  const { dir, cleanup } = makeDir({
+    [MANIFEST_NAME]: manifest({
+      permissions: ["track-decorations"],
+      trackRules: [{ match: {}, decoration: { icon: "sparkles" } }],
+    }),
+  });
+  const result = await auditExtension(dir);
+  assert.equal(result.errors.length, 0, result.errors.join("\n"));
+  cleanup();
+});
+
+test("unused declared permission warns", async () => {
+  const { dir, cleanup } = makeDir({
+    [MANIFEST_NAME]: manifest({
+      permissions: ["script"],
+      trackRules: [{ match: {}, decoration: { icon: "sparkles" } }],
+    }),
+  });
+  const result = await auditExtension(dir);
+  assert.ok(result.errors.some((e) => e.includes("does not declare")));
+  assert.ok(result.warnings.some((w) => w.includes("declares script")));
+  cleanup();
+});
+
+test("missing permissions on a capable extension warns", async () => {
+  const { dir, cleanup } = makeDir({
+    [MANIFEST_NAME]: manifest({
+      trackRules: [{ match: {}, decoration: { icon: "sparkles" } }],
+    }),
+  });
+  const result = await auditExtension(dir);
+  assert.equal(result.errors.length, 0);
+  assert.ok(result.warnings.some((w) => w.includes("no permissions declared")));
+  cleanup();
+});
+
+test("unknown permission fails", async () => {
+  const { dir, cleanup } = makeDir({
+    [MANIFEST_NAME]: manifest({ permissions: ["network"] }),
+  });
+  const result = await auditExtension(dir);
+  assert.ok(result.errors.some((e) => e.includes("unknown permission")));
+  cleanup();
+});
+
+test("bad minAppVersion fails", async () => {
+  const { dir, cleanup } = makeDir({
+    [MANIFEST_NAME]: manifest({ minAppVersion: "soon" }),
+  });
+  const result = await auditExtension(dir);
+  assert.ok(result.errors.some((e) => e.includes("minAppVersion")));
+  cleanup();
+});
+
+test("requires pointing at a missing extension fails", async () => {
+  const { dir, cleanup } = makeDir({
+    [MANIFEST_NAME]: manifest({ requires: ["not-here"] }),
+  });
+  const result = await auditExtension(dir);
+  assert.ok(result.errors.some((e) => e.includes("not in this registry")));
+  cleanup();
+});
+
+test("requires may not list itself", async () => {
+  const { dir, cleanup } = makeDir({
+    [MANIFEST_NAME]: manifest({ requires: ["my-ext"] }),
+  });
+  const result = await auditExtension(dir);
+  assert.ok(result.errors.some((e) => e.includes("may not list the extension itself")));
+  cleanup();
+});
+
+test("valid settings pass", async () => {
+  const { dir, cleanup } = makeDir({
+    [MANIFEST_NAME]: manifest({
+      settings: [
+        { key: "muted", type: "boolean", default: false },
+        { key: "accent", type: "choice", options: ["red", "blue"], default: "red" },
+        { key: "note", type: "text" },
+      ],
+    }),
+  });
+  const result = await auditExtension(dir);
+  assert.equal(result.errors.length, 0);
+  cleanup();
+});
+
+test("settings schema errors fail", async () => {
+  const cases = [
+    { settings: "nope" },
+    { settings: [{ key: "bad key", type: "boolean" }] },
+    { settings: [{ key: "a", type: "boolean" }, { key: "a", type: "text" }] },
+    { settings: [{ key: "a", type: "number" }] },
+    { settings: [{ key: "a", type: "choice" }] },
+    { settings: [{ key: "a", type: "choice", options: ["x"], default: "y" }] },
+    { settings: [{ key: "a", type: "boolean", default: "yes" }] },
+  ];
+  for (const extra of cases) {
+    const { dir, cleanup } = makeDir({
+      [MANIFEST_NAME]: manifest(extra),
+    });
+    const result = await auditExtension(dir);
+    assert.ok(
+      result.errors.some((e) => e.includes("settings")),
+      `expected settings error for ${JSON.stringify(extra)}, got ${result.errors}`,
+    );
+    cleanup();
+  }
+});
+
 test("buildZip writes a readable archive", () => {
   const zip = buildZip([
     { name: "my-ext/melovian-extension.json", data: Buffer.from("{}") },

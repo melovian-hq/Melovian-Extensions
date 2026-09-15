@@ -2,7 +2,7 @@ name: Registry integrity
 
 on:
   schedule:
-    - cron: "0 6 * * 1"
+    - cron: "0 6 * * *"
   workflow_dispatch:
 
 concurrency:
@@ -49,3 +49,50 @@ jobs:
             if (!verifyBytes(pub, reg, sig)) throw new Error("registry.sig does not verify");
             console.log("registry.sig verifies against keys/registry.pub");
           '
+
+  reaudit:
+    name: Re-audit published packages
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+        with:
+          egress-policy: audit
+
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup Node
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          node-version-file: .nvmrc
+
+      # New audit heuristics get applied to already published packages so
+      # old releases do not silently pass rules added after they shipped.
+      - name: Re-audit published packages
+        run: node tools/reaudit.mjs > reaudit.md
+
+      - name: Open issue on new findings
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          MARKER="extension-reaudit"
+          if ! grep -q "new warning\|\*\*error\*\*" reaudit.md; then
+            echo "no new findings"
+            exit 0
+          fi
+          printf '\n<!-- %s -->\n' "$MARKER" >> reaudit.md
+          OPEN="$(gh issue list --state open --limit 100 --json title,body \
+            --jq "[.[] | select(.body | contains(\"$MARKER\"))][0].number")"
+          if [ -n "$OPEN" ]; then
+            gh issue comment "$OPEN" --body-file reaudit.md
+          else
+            gh issue create --title "Re-audit found new findings in published extensions" \
+              --label "security" --body-file reaudit.md
+          fi

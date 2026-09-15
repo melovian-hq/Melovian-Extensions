@@ -1,12 +1,27 @@
 {
   "id": "genre-palette",
   "name": "Genre palette",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Colors the progress bar by genre. A sandboxed TypeScript script registers one rule per genre so the palette stays compact.",
   "author": "Melovian",
   "license": "Apache-2.0",
   "homepage": "https://github.com/melovian-hq/Melovian-Extensions",
-  "tags": ["genre", "colors", "script"],
+  "tags": [
+    "genre",
+    "colors",
+    "script"
+  ],
   "icon": "assets/icon.svg",
-  "script": "script.ts"
+  "script": "script.ts",
+  "permissions": [
+    "script"
+  ],
+  "settings": [
+    {
+      "key": "muted",
+      "label": "Muted palette",
+      "type": "boolean",
+      "default": false
+    }
+  ]
 }

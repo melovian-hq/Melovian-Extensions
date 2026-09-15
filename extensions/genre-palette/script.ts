@@ -30,11 +30,22 @@ const PALETTE: Array<[string, string]> = [
   ["drum and bass", "#ff7847"]
 ];
 
+// Blend each channel toward mid gray for the muted palette option.
+function mute(hex: string): string {
+  const n = parseInt(hex.slice(1), 16);
+  const mix = (c: number): number => Math.round(c * 0.55 + 0x80 * 0.45);
+  const r = mix((n >> 16) & 255);
+  const g = mix((n >> 8) & 255);
+  const b = mix(n & 255);
+  return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, "0")}`;
+}
+
 function register(api: melovian.ExtensionAPI): void {
+  const muted = api.settings.muted === true;
   for (const [genre, color] of PALETTE) {
     api.registerTrackRule({
       match: { genreContains: genre },
-      decoration: { progressColor: color }
+      decoration: { progressColor: muted ? mute(color) : color }
     });
   }
 }

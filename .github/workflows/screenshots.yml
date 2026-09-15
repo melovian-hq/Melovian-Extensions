@@ -1,0 +1,52 @@
+name: Extension screenshots
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: screenshots-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  shots:
+    name: Render extension screenshots
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+        with:
+          egress-policy: audit
+
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup Node
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          node-version-file: .nvmrc
+
+      - name: Install Playwright
+        working-directory: tools/screenshot
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+
+      - name: Render screenshots
+        working-directory: tools/screenshot
+        run: node shot.mjs
+
+      - name: Upload screenshots
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: extension-screenshots
+          path: tools/screenshot/out/*.png
+          retention-days: 14
